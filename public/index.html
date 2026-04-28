@@ -1,12 +1,906 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading">Hello, World!</h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RepoBeats — Turn your GitHub into a song</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-0: #07060f;
+        --bg-1: #120a26;
+        --accent: #b388ff;
+        --accent-2: #ff6ec7;
+        --accent-3: #4f9dff;
+        --text: #f4f5f7;
+        --muted: #b4b8d0;
+        --danger: #ff6a71;
+        --surface: rgba(28, 24, 52, 0.78);
+        --surface-2: rgba(12, 10, 26, 0.55);
+        --border: rgba(255, 255, 255, 0.12);
+        --border-strong: rgba(255, 255, 255, 0.18);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: var(--text);
+        background: radial-gradient(1200px 800px at 80% -10%, #2a1450 0%, transparent 60%),
+          radial-gradient(900px 700px at -10% 110%, #102a55 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-0));
+        overflow-x: hidden;
+      }
+      /* Soft animated glow */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -10vmax;
+        background: radial-gradient(closest-side, rgba(179, 136, 255, 0.18), transparent 60%),
+          radial-gradient(closest-side, rgba(255, 110, 199, 0.12), transparent 60%);
+        background-size: 60vmax 60vmax, 50vmax 50vmax;
+        background-repeat: no-repeat;
+        background-position: 20% 30%, 80% 70%;
+        filter: blur(20px);
+        z-index: -1;
+        animation: drift 18s ease-in-out infinite alternate;
+      }
+      @keyframes drift {
+        0% { background-position: 20% 30%, 80% 70%; }
+        100% { background-position: 60% 60%, 30% 40%; }
+      }
+
+      main {
+        min-height: 100vh;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: clamp(1.5rem, 4vw, 3rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2rem;
+      }
+
+      .hero {
+        text-align: center;
+        display: grid;
+        gap: 1rem;
+        place-items: center;
+      }
+      .wordmark {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .wordmark::before,
+      .wordmark::after {
+        content: "";
+        display: inline-block;
+        width: 28px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      }
+      .wordmark .name {
+        background: linear-gradient(120deg, var(--accent-2), var(--accent), var(--accent-3));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 0;
+        max-width: 14ch;
+        font-size: clamp(2.2rem, 5.2vw, 3.8rem);
+        line-height: 1.1;
+        padding-bottom: 0.1em;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+        text-wrap: balance;
+        background: linear-gradient(120deg, #ffffff 0%, #c8b8ff 40%, #ff9ad8 80%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .tagline {
+        margin: 0;
+        max-width: 620px;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.6vw, 1.15rem);
+        line-height: 1.5;
+      }
+
+      .composer {
+        margin: 0 auto;
+        width: min(720px, 100%);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-radius: 22px;
+        padding: 0.6rem;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr auto;
+        gap: 0.5rem;
+        box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+      .composer .field {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .composer .field .icon {
+        position: absolute;
+        left: 0.85rem;
+        opacity: 0.7;
+        pointer-events: none;
+      }
+      .composer input,
+      .composer select {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 100%;
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 0.95rem 1rem 0.95rem 2.5rem;
+        font: inherit;
+        font-size: 1rem;
+        transition: border-color 150ms ease, background 150ms ease;
+      }
+      .composer select {
+        background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+      }
+      .composer input:focus,
+      .composer select:focus {
+        outline: none;
+        border-color: rgba(179, 136, 255, 0.7);
+        background-color: rgba(20, 16, 40, 0.7);
+        box-shadow: 0 0 0 3px rgba(179, 136, 255, 0.15);
+      }
+      .composer button {
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.01em;
+        color: #110a26;
+        padding: 0 1.6rem;
+        border-radius: 16px;
+        background: linear-gradient(120deg, var(--accent-2), var(--accent), var(--accent-3));
+        background-size: 200% 100%;
+        background-position: 0% 50%;
+        transition: background-position 600ms ease, transform 120ms ease, opacity 150ms ease;
+        white-space: nowrap;
+      }
+      .composer button:hover { background-position: 100% 50%; }
+      .composer button:active { transform: translateY(1px); }
+      .composer button:disabled { opacity: 0.55; cursor: wait; }
+
+      @media (max-width: 720px) {
+        .composer {
+          grid-template-columns: 1fr;
+        }
+        .composer button { padding: 0.95rem 1.2rem; }
+      }
+
+      .error {
+        text-align: center;
+        color: var(--danger);
+        min-height: 1.4rem;
+        font-size: 0.95rem;
+      }
+
+      /* Loading scene */
+      .stage {
+        display: none;
+        place-items: center;
+        text-align: center;
+        gap: 1.4rem;
+      }
+      .stage.active { display: grid; }
+
+      .equalizer {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        height: 90px;
+      }
+      .equalizer span {
+        display: inline-block;
+        width: 10px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, var(--accent-2), var(--accent), var(--accent-3));
+        animation: bounce 1s ease-in-out infinite;
+      }
+      .equalizer span:nth-child(1) { animation-delay: -0.9s; }
+      .equalizer span:nth-child(2) { animation-delay: -0.6s; }
+      .equalizer span:nth-child(3) { animation-delay: -0.3s; }
+      .equalizer span:nth-child(4) { animation-delay: -0.5s; }
+      .equalizer span:nth-child(5) { animation-delay: -0.1s; }
+      .equalizer span:nth-child(6) { animation-delay: -0.7s; }
+      .equalizer span:nth-child(7) { animation-delay: -0.4s; }
+      @keyframes bounce {
+        0%, 100% { height: 14px; opacity: 0.7; }
+        50% { height: 90px; opacity: 1; }
+      }
+
+      .step {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: clamp(1.05rem, 2vw, 1.4rem);
+        color: var(--text);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 300ms ease, transform 300ms ease;
+        min-height: 2rem;
+      }
+      .step.visible { opacity: 1; transform: translateY(0); }
+      .step .emoji { font-size: 1.5em; line-height: 1; }
+      .step-sub {
+        color: var(--muted);
+        font-size: 0.95rem;
+        max-width: 520px;
+      }
+
+      .progress {
+        width: min(420px, 100%);
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        overflow: hidden;
+      }
+      .progress > div {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+        transition: width 600ms ease;
+      }
+
+      /* Result */
+      .result {
+        display: none;
+        gap: 1rem;
+        flex-direction: column;
+      }
+      .result.active { display: flex; }
+      .result-card {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: 22px;
+        padding: 1.6rem;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+      .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .result-title {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .result-title span.accent {
+        background: linear-gradient(120deg, var(--accent-2), var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.4rem;
+      }
+      .pill {
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .player-row {
+        margin-top: 1.2rem;
+        padding: 1rem 1.1rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      audio {
+        width: 100%;
+        max-width: 480px;
+      }
+      a.download {
+        color: #c8b8ff;
+        font-size: 0.95rem;
+        text-decoration: none;
+        border-bottom: 1px dashed rgba(200, 184, 255, 0.5);
+      }
+      a.download:hover { color: #fff; }
+      .liner {
+        margin: 1rem 0 0;
+        color: var(--muted);
+        font-style: italic;
+      }
+      .lyrics-section {
+        margin-top: 1.2rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1.1rem;
+      }
+      .lyrics-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        color: var(--muted);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.92rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        transition: color 150ms ease;
+      }
+      .lyrics-toggle:hover { color: var(--text); }
+      .lyrics-toggle .chev {
+        display: inline-block;
+        transition: transform 200ms ease;
+        font-size: 0.7em;
+        opacity: 0.8;
+      }
+      .lyrics-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+      .lyrics {
+        margin: 0.9rem 0 0;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #e7e9f8;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.1rem 1.25rem;
+        display: none;
+      }
+      .lyrics.visible { display: block; }
+
+      .restart {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 0.55rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+        transition: color 150ms ease, border-color 150ms ease;
+      }
+      .restart:hover { color: var(--text); border-color: var(--border-strong); }
+      .restart.copied { color: var(--accent); border-color: rgba(179, 136, 255, 0.5); }
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .empty-state {
+        display: none;
+        text-align: center;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      .empty-state.active { display: block; }
+      .empty-state h2 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+        line-height: 1.2;
+      }
+      .empty-state h2 .accent {
+        background: linear-gradient(120deg, var(--accent-2), var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .empty-state p {
+        color: var(--muted);
+        margin: 0 0 1.4rem;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+      .empty-state .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #110a26;
+        background: linear-gradient(120deg, var(--accent-2), var(--accent), var(--accent-3));
+        background-size: 200% 100%;
+        background-position: 0% 50%;
+        transition: background-position 600ms ease, transform 120ms ease;
+        text-decoration: none;
+      }
+      .empty-state .cta:hover { background-position: 100% 50%; }
+      .empty-state .cta:active { transform: translateY(1px); }
+
+      .route-loader {
+        display: none;
+        place-items: center;
+        text-align: center;
+        gap: 0.8rem;
+        color: var(--muted);
+        min-height: 220px;
+      }
+      .route-loader .dot {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 999px;
+        background: linear-gradient(120deg, var(--accent-2), var(--accent), var(--accent-3));
+        animation: route-pulse 900ms ease-in-out infinite;
+      }
+      @keyframes route-pulse {
+        0%, 100% { transform: scale(0.8); opacity: 0.6; }
+        50% { transform: scale(1.15); opacity: 1; }
+      }
+
+      body.booting #landing,
+      body.booting #stage,
+      body.booting #result,
+      body.booting #emptyState {
+        display: none !important;
+      }
+      body.booting .route-loader {
+        display: grid;
+      }
+    </style>
+  </head>
+  <body class="booting">
+    <main>
+      <section id="routeLoader" class="route-loader" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <p id="routeLoaderText">Loading…</p>
+      </section>
+
+      <!-- Landing / form -->
+      <section id="landing" class="hero">
+        <span class="wordmark"><span class="name">RepoBeats</span></span>
+        <h1>Turn your GitHub into a roast&nbsp;song.</h1>
+        <p class="tagline">
+          Drop a username, pick a vibe. We mine the repos, write savage but playful lyrics, and
+          ship a fresh AI-generated roast track in about a minute.
+        </p>
+
+        <form id="songForm" class="composer" autocomplete="off">
+          <label class="field" aria-label="GitHub username">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+            </svg>
+            <input id="username" name="username" placeholder="github username" maxlength="39" required spellcheck="false" autocapitalize="off" />
+          </label>
+          <label class="field" aria-label="Genre">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <select id="genre" name="genre" required>
+              <option value="Indie Rock" selected>Indie Rock</option>
+              <option value="Pop">Pop</option>
+              <option value="Rap">Rap</option>
+              <option value="Metal">Metal</option>
+              <option value="Hip Hop">Hip Hop</option>
+              <option value="Country">Country</option>
+            </select>
+          </label>
+          <button id="submitButton" type="submit">Generate</button>
+        </form>
+
+        <div id="error" class="error" role="alert" aria-live="polite"></div>
+      </section>
+
+      <!-- Loading -->
+      <section id="stage" class="stage" aria-live="polite">
+        <div class="equalizer" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div id="step" class="step visible">
+          <span class="emoji">🎧</span>
+          <span class="text">Warming up the studio...</span>
+        </div>
+        <div class="step-sub" id="stepSub">This takes about a minute. Don't refresh — magic in progress.</div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </section>
+
+      <!-- Result -->
+      <section id="result" class="result">
+        <article class="result-card">
+          <div class="result-header">
+            <div>
+              <h2 class="result-title">Your <span class="accent" id="resultGenre">indie rock</span> roast for <span class="accent" id="resultUser">@user</span></h2>
+              <div class="meta" id="profileMeta"></div>
+            </div>
+            <div class="header-actions">
+              <button id="shareBtn" class="restart" type="button" title="Copy share link">Copy link</button>
+              <a id="shareXBtn" class="restart" target="_blank" rel="noopener" title="Share on X" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: -2px; margin-right: 0.35rem;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>Share on X</span>
+              </a>
+              <button id="restartBtn" class="restart" type="button">↺ Make another</button>
+            </div>
+          </div>
+
+          <div class="player-row">
+            <audio id="player" controls preload="auto"></audio>
+            <a id="download" class="download" href="#" target="_blank" rel="noopener" download>Download mp3</a>
+          </div>
+
+          <p id="linerNotes" class="liner"></p>
+
+          <div class="lyrics-section">
+            <button id="lyricsToggle" class="lyrics-toggle" type="button" aria-expanded="false" aria-controls="lyrics">
+              <span class="chev">▶</span><span id="lyricsToggleLabel">Show lyrics</span>
+            </button>
+            <pre id="lyrics" class="lyrics" aria-hidden="true"></pre>
+          </div>
+        </article>
+      </section>
+
+      <!-- No song yet (share link miss) -->
+      <section id="emptyState" class="empty-state">
+        <h2>No song yet for <span class="accent" id="emptyHandle">@user</span>.</h2>
+        <p>Looks like nobody has roasted this developer in song form. Want the honors?</p>
+        <button id="emptyGenerateBtn" class="cta" type="button">Generate their song</button>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById("songForm");
+      const errorEl = document.getElementById("error");
+      const submitButton = document.getElementById("submitButton");
+      const landingEl = document.getElementById("landing");
+      const stageEl = document.getElementById("stage");
+      const stepEl = document.getElementById("step");
+      const progressBar = document.getElementById("progressBar");
+      const resultEl = document.getElementById("result");
+      const playerEl = document.getElementById("player");
+      const lyricsEl = document.getElementById("lyrics");
+      const lyricsToggle = document.getElementById("lyricsToggle");
+      const lyricsToggleLabel = document.getElementById("lyricsToggleLabel");
+      const linerNotesEl = document.getElementById("linerNotes");
+      const profileMetaEl = document.getElementById("profileMeta");
+      const downloadEl = document.getElementById("download");
+      const resultUser = document.getElementById("resultUser");
+      const resultGenre = document.getElementById("resultGenre");
+      const restartBtn = document.getElementById("restartBtn");
+      const shareBtn = document.getElementById("shareBtn");
+      const shareXBtn = document.getElementById("shareXBtn");
+      const emptyStateEl = document.getElementById("emptyState");
+      const emptyHandleEl = document.getElementById("emptyHandle");
+      const emptyGenerateBtn = document.getElementById("emptyGenerateBtn");
+      const usernameInput = document.getElementById("username");
+      const routeLoaderTextEl = document.getElementById("routeLoaderText");
+
+      const LOADING_STEPS = [
+        { emoji: "🛰️", text: "Pinging GitHub satellites..." },
+        { emoji: "📦", text: "Cloning your greatest hits (and misses)..." },
+        { emoji: "🔍", text: "Reading suspiciously vague commit messages..." },
+        { emoji: "🧠", text: "Synthesizing your developer profile..." },
+        { emoji: "✍️", text: "Writing lyrics about that one repo..." },
+        { emoji: "🌶️", text: "Adding more spice to the roast..." },
+        { emoji: "🎚️", text: "Tuning instruments to your stack trace..." },
+        { emoji: "🥁", text: "Laying down the beat..." },
+        { emoji: "🎤", text: "Recording vocals (one take only)..." },
+        { emoji: "🎛️", text: "Mixing and mastering..." },
+        { emoji: "✨", text: "Polishing the final cut..." },
+      ];
+
+      let stepTimer = null;
+      let progressTimer = null;
+
+      function finishBoot() {
+        document.body.classList.remove("booting");
+      }
+
+      function setError(message) {
+        errorEl.textContent = message || "";
+      }
+
+      function showLanding() {
+        finishBoot();
+        landingEl.style.display = "";
+        stageEl.classList.remove("active");
+        resultEl.classList.remove("active");
+        emptyStateEl.classList.remove("active");
+      }
+
+      function showStage() {
+        finishBoot();
+        landingEl.style.display = "none";
+        resultEl.classList.remove("active");
+        emptyStateEl.classList.remove("active");
+        stageEl.classList.add("active");
+      }
+
+      function showResult() {
+        finishBoot();
+        stopLoadingAnimation();
+        landingEl.style.display = "none";
+        stageEl.classList.remove("active");
+        emptyStateEl.classList.remove("active");
+        resultEl.classList.add("active");
+      }
+
+      function showEmptyState(handle) {
+        finishBoot();
+        stopLoadingAnimation();
+        landingEl.style.display = "none";
+        stageEl.classList.remove("active");
+        resultEl.classList.remove("active");
+        emptyHandleEl.textContent = "@" + handle;
+        emptyStateEl.classList.add("active");
+      }
+
+      function renderSongData(data) {
+        playerEl.src = data.audioUrl;
+        downloadEl.href = data.audioUrl;
+        lyricsEl.textContent = data.lyrics || "No lyrics returned.";
+        linerNotesEl.textContent = data.linerNotes || "";
+        resultUser.textContent = "@" + data.username;
+        resultGenre.textContent = (data.genre || "indie rock").toLowerCase();
+        renderProfileMeta(data);
+        setLyricsVisible(false);
+        updateShareXHref(data.username);
+      }
+
+      function updateShareXHref(username) {
+        const shareUrl = location.origin + "/@" + username;
+        const text = `I just got roasted in song form on RepoBeats 🎤🔥 listen to @${username}'s track:`;
+        const intent = "https://twitter.com/intent/tweet?text=" +
+          encodeURIComponent(text) +
+          "&url=" +
+          encodeURIComponent(shareUrl);
+        shareXBtn.href = intent;
+      }
+
+      function renderStep(index) {
+        const clamped = Math.min(index, LOADING_STEPS.length - 1);
+        const step = LOADING_STEPS[clamped];
+        stepEl.classList.remove("visible");
+        void stepEl.offsetWidth;
+        stepEl.querySelector(".emoji").textContent = step.emoji;
+        stepEl.querySelector(".text").textContent = step.text;
+        stepEl.classList.add("visible");
+      }
+
+      function startLoadingAnimation() {
+        const TOTAL_MS = 55000;
+        const stepInterval = TOTAL_MS / LOADING_STEPS.length;
+        let i = 0;
+        renderStep(i);
+        stepTimer = window.setInterval(() => {
+          i += 1;
+          if (i >= LOADING_STEPS.length - 1) {
+            renderStep(LOADING_STEPS.length - 1);
+            window.clearInterval(stepTimer);
+            stepTimer = null;
+            return;
+          }
+          renderStep(i);
+        }, stepInterval);
+
+        const startedAt = Date.now();
+        progressBar.style.width = "0%";
+        progressTimer = window.setInterval(() => {
+          const elapsed = Date.now() - startedAt;
+          const ratio = Math.min(1, elapsed / TOTAL_MS);
+          /** Ease-out curve: hits ~99% right at the 55s mark, then waits for completion. */
+          const pct = (1 - Math.pow(1 - ratio, 2)) * 99;
+          progressBar.style.width = pct.toFixed(1) + "%";
+        }, 200);
+      }
+
+      function stopLoadingAnimation() {
+        if (stepTimer) window.clearInterval(stepTimer);
+        if (progressTimer) window.clearInterval(progressTimer);
+        stepTimer = null;
+        progressTimer = null;
+        progressBar.style.width = "100%";
+      }
+
+      function renderProfileMeta(data) {
+        profileMetaEl.innerHTML = "";
+        const entries = [];
+        if (data.genre) entries.push(`Genre: ${data.genre}`);
+        if (Array.isArray(data.profile?.topLanguages) && data.profile.topLanguages.length) {
+          entries.push(`Top: ${data.profile.topLanguages.slice(0, 3).join(", ")}`);
+        }
+        for (const text of entries) {
+          const span = document.createElement("span");
+          span.className = "pill";
+          span.textContent = text;
+          profileMetaEl.appendChild(span);
+        }
+      }
+
+      function setLyricsVisible(visible) {
+        lyricsEl.classList.toggle("visible", visible);
+        lyricsEl.setAttribute("aria-hidden", visible ? "false" : "true");
+        lyricsToggle.setAttribute("aria-expanded", visible ? "true" : "false");
+        lyricsToggleLabel.textContent = visible ? "Hide lyrics" : "Show lyrics";
+      }
+
+      lyricsToggle.addEventListener("click", () => {
+        setLyricsVisible(!lyricsEl.classList.contains("visible"));
+      });
+
+      function goToLanding(prefillUsername) {
+        playerEl.pause();
+        playerEl.removeAttribute("src");
+        playerEl.load();
+        setLyricsVisible(false);
+        setError("");
+        submitButton.disabled = false;
+        if (prefillUsername) {
+          usernameInput.value = prefillUsername;
+        }
+        history.replaceState(null, "", "/");
+        showLanding();
+      }
+
+      restartBtn.addEventListener("click", () => goToLanding());
+
+      shareBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          shareBtn.textContent = "Copied";
+          shareBtn.classList.add("copied");
+          setTimeout(() => {
+            shareBtn.textContent = "Copy link";
+            shareBtn.classList.remove("copied");
+          }, 1600);
+        } catch {
+          shareBtn.textContent = location.href;
+        }
+      });
+
+      emptyGenerateBtn.addEventListener("click", () => {
+        const handle = emptyHandleEl.textContent.replace(/^@/, "");
+        goToLanding(handle);
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setError("");
+
+        const formData = new FormData(form);
+        const payload = {
+          username: String(formData.get("username") || "").trim(),
+          genre: String(formData.get("genre") || "").trim(),
+        };
+
+        if (!payload.username) {
+          setError("Please enter a GitHub username.");
+          return;
+        }
+        if (!payload.genre) {
+          setError("Please pick a genre.");
+          return;
+        }
+
+        submitButton.disabled = true;
+        showStage();
+        startLoadingAnimation();
+
+        try {
+          const response = await fetch("/api/generate-song", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Generation failed.");
+          }
+
+          renderSongData({ ...data, genre: data.genre || payload.genre });
+          history.replaceState(null, "", "/@" + data.username);
+          showResult();
+        } catch (error) {
+          stopLoadingAnimation();
+          const message = error instanceof Error ? error.message : "Something went wrong.";
+          setError(message);
+          showLanding();
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      /**
+       * Initial route handling.
+       * - `/@handle` → fetch cached song; show result, or empty-state if 404.
+       * - `/?u=handle` → show landing with username pre-filled.
+       * - everything else → landing.
+       *
+       * The Workers static-asset layer URL-encodes `@` to `%40` and 307s to
+       * the encoded form, so we accept both `@` and `%40` in the path and
+       * normalize the visible URL back to the pretty `@handle` form.
+       */
+      async function bootstrap() {
+        const decodedPath = decodeURIComponent(location.pathname);
+        const handleMatch = /^\/@([^/?#]+)/.exec(decodedPath);
+        if (handleMatch) {
+          const handle = handleMatch[1];
+          routeLoaderTextEl.textContent = "Loading @" + handle + "'s song...";
+          if (location.pathname !== "/@" + handle) {
+            history.replaceState(null, "", "/@" + handle + location.search + location.hash);
+          }
+          try {
+            const res = await fetch("/api/song/" + encodeURIComponent(handle));
+            if (res.ok) {
+              const data = await res.json();
+              renderSongData(data);
+              showResult();
+              return;
+            }
+            if (res.status === 404) {
+              showEmptyState(handle);
+              return;
+            }
+          } catch {
+            // fall through to landing
+          }
+          showEmptyState(handle);
+          return;
+        }
+
+        const params = new URLSearchParams(location.search);
+        const prefill = params.get("u");
+        if (prefill) {
+          usernameInput.value = prefill;
+        }
+        showLanding();
+      }
+
+      bootstrap();
+    </script>
+  </body>
 </html>
